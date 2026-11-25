@@ -266,8 +266,8 @@ phase 1 was skipped. For the `small` track, use mode `short`.
 8. G5 is complete when all these conditions are true:
    - There are no open 🐞, 🔴 or 🟠 items.
    - CI is green on each PR.
-   - Each check in each `test-checklist-<pr-key>.md` is `[x]`, or has a 🔍 note that the
-     runtime test could not do. Tell the user each of these checks.
+   - Each check in each `test-checklist-<pr-key>.md` is `[x]`, or has a 🔍 note because
+     the runtime test cannot do it. Tell the user each of these checks.
 
 ### Phase 7 — Release
 

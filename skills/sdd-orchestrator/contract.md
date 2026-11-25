@@ -34,7 +34,7 @@ If the project uses a different structure, use the structure of the project.
 | `plan-review.md` | architecture-reviewer | agent file |
 | `security.md`, `security-<pr-key>.md` | security | agent file |
 | `test-checklist-<pr-key>.md`, `static-review-<pr-key>.md` (one pair for each PR key of `tasks.md`) | tester | test-checklist and static-review skills |
-| `contract-check.md`, `release-check.md`, `screenshots/` | tester | agent file |
+| `contract-check.md`, `release-check.md`, `screenshots/<pr-key>/` | tester | agent file |
 | code, branch, PR | backend-implementer, web-implementer, mobile-implementer, devops | agent file and the Implementers section below |
 | PR comments, `pr-review-<n>.md` | code-reviewer | pr-review skill |
 | `README.md` of the feature folder, `docs/tech/` without ADRs, project README and CHANGELOG, docs branch and PR | documenter | agent file |
@@ -102,7 +102,7 @@ All agents can add `Lesson: <one line for the learn-loop skill>`, or "none".
 ## Implementers
 
 These rules apply to backend-implementer, web-implementer, mobile-implementer and
-devops.
+devops. Mode `build` does the tasks of the dispatch. Modes `fix` and `bugfix` are below.
 
 1. **Do only your tasks.** The dispatch gives the PR key and the task IDs from
    `tasks.md`. Do not do other tasks. All your tasks go into one PR.
@@ -135,10 +135,10 @@ devops.
 10. **Do not wait for CI.** After the push, report and stop. The orchestrator waits for
     CI.
 11. **Do not merge.** Do not mark items in the test checklist. The tester marks them.
-12. **Fix mode.** The dispatch gives the PR and the defects (`DEF` IDs and review
+12. **Mode `fix`.** The dispatch gives the PR and the defects (`DEF` IDs and review
     threads). Correct each defect, or answer the thread with the reason. Push to the
     same branch.
-13. **Bugfix mode.** The dispatch gives a bug report. There is no feature folder.
+13. **Mode `bugfix`.** The dispatch gives a bug report. There is no feature folder.
     1. Reproduce the defect with an automated test that fails. If you cannot reproduce
        it, stop with `Status: needs-input`, and tell which data you need.
     2. Find the cause, not only the symptom. Find each caller of the code that you

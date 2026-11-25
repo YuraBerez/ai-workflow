@@ -12,6 +12,16 @@
 #      and in the Agents table of README.md, and these tables name no other agents.
 #   5. Each skill is in the Skills table of README.md.
 #   6. Each hook is in the Hooks table of README.md.
+#   7. Each link to a heading (`file.md#heading`) points to a heading that exists.
+#   8. Each skill and agent description has 1024 characters or fewer.
+#   9. Each mode in the Team table of the orchestrator is in the agent file or in
+#      contract.md.
+#  10. Each file of the feature folder template is in the owner table of contract.md.
+#  11. Each script in hooks/ and scripts/ is executable.
+#  12. No file and no commit message contains a private name. The names are in a local file
+#      outside the repository, one name on each line:
+#      ${AI_WORKFLOW_PRIVATE_NAMES:-~/.config/ai-workflow/private-names.txt}
+# It also shows warnings (not errors) for words that ASD-STE100 does not permit.
 # Exit code 1 if a check fails.
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -122,6 +132,105 @@ for name in skills:
 for name in hooks:
     if f'(hooks/{name})' not in readme:
         err(f'README.md: hook "{name}" is not in the Hooks table')
+
+# 7. links to headings
+def slug(heading):
+    heading = re.sub(r'`', '', heading.strip().lower())
+    heading = re.sub(r'[^\w\- ]', '', heading)
+    return heading.replace(' ', '-')
+
+def headings(path):
+    text = re.sub(r'```.*?```', '', path.read_text(), flags=re.S)
+    return {slug(h) for h in re.findall(r'^#{1,6} (.+)$', text, re.M)}
+
+for p in md_files:
+    text = re.sub(r'```.*?```', '', p.read_text(), flags=re.S)
+    text = re.sub(r'`[^`\n]*`', '', text)
+    for target in re.findall(r'\]\(([^)\s]+)\)', text):
+        if re.match(r'^[a-z]+:', target) or '<' in target or '#' not in target:
+            continue
+        path, anchor = target.split('#', 1)
+        file = (p.parent / path) if path else p
+        if file.suffix == '.md' and file.exists() and anchor not in headings(file):
+            err(f'{p}: link "{target}" points to a heading that does not exist')
+
+# 8. description length
+for p in list(root.glob('skills/*/SKILL.md')) + list(root.glob('agents/*.md')):
+    fm = frontmatter(p) or {}
+    if len(fm.get('description', '')) > 1024:
+        err(f'{p}: description has {len(fm["description"])} characters, more than 1024')
+
+# 9. modes
+contract = (root / 'skills/sdd-orchestrator/contract.md').read_text()
+for row in (m.group(1) if m else '').splitlines():
+    cells = [c.strip() for c in row.split('|')[1:-1]]
+    if len(cells) < 4 or cells[0] in ('Agent',) or cells[0].startswith('--'):
+        continue
+    modes = re.findall(r'`([a-z-]+)`', cells[3])
+    for name in re.split(r',\s*', cells[0]):
+        if name not in agents:
+            continue
+        text = (root / 'agents' / f'{name}.md').read_text() + contract
+        for mode in modes:
+            if f'`{mode}`' not in text:
+                err(f'agents/{name}.md: mode "{mode}" of the Team table is not in the agent file or in contract.md')
+
+# 10. feature folder template against the owner table
+def plain(value):
+    return re.sub(r'<[^>]*>', '', value)
+
+template = root / 'templates/docs/features/README.md'
+if template.exists():
+    owners = plain(contract)
+    for row in template.read_text().splitlines():
+        cell = row.split('|')[1].strip() if row.startswith('| `') else ''
+        for name in re.findall(r'`([^`]+)`', cell):
+            if plain(name) not in owners:
+                err(f'{template}: "{name}" is not in the owner table of contract.md')
+
+# 11. executable scripts
+import os
+for p in list(root.glob('hooks/*.sh')) + list(root.glob('scripts/*.sh')):
+    if not os.access(p, os.X_OK):
+        err(f'{p}: not executable (run chmod +x)')
+
+# 12. private names
+import os, subprocess
+names_file = pathlib.Path(os.environ.get('AI_WORKFLOW_PRIVATE_NAMES',
+                          os.path.expanduser('~/.config/ai-workflow/private-names.txt')))
+if names_file.exists():
+    names = [n.strip() for n in names_file.read_text().splitlines() if n.strip() and not n.startswith('#')]
+    files = subprocess.run(['git', 'ls-files', '--cached', '--others', '--exclude-standard'],
+                           capture_output=True, text=True).stdout.split()
+    for f in files:
+        try:
+            text = (root / f).read_text().lower()
+        except (UnicodeDecodeError, FileNotFoundError):
+            continue
+        for n in names:
+            if n.lower() in text:
+                err(f'{f}: contains a private name from {names_file}')
+    log = subprocess.run(['git', 'log', '--format=%h %B'], capture_output=True, text=True).stdout.lower()
+    for n in names:
+        if n.lower() in log:
+            err(f'git log: a commit message contains a private name from {names_file}')
+
+# warnings: words that ASD-STE100 does not permit
+bad = re.compile(r"\b(should|would|could|might|don't|can't|won't|isn't|doesn't|e\.g\.|i\.e\.|etc\.|via|utilize|leverage)\b", re.I)
+warnings = []
+for p in md_files:
+    if p.parts[:2] == ('skills', 'writing-style'):
+        continue
+    text = re.sub(r'```.*?```', '', p.read_text(), flags=re.S)
+    for n, line in enumerate(text.splitlines(), 1):
+        line = re.sub(r'`[^`]*`', '', line)
+        line = re.sub(r'"[^"]*"', '', line)
+        for word in bad.findall(line):
+            warnings.append(f'{p}: "{word}" (STE)')
+if warnings:
+    print('Warnings:')
+    print('\n'.join(sorted(set(warnings))))
+    print()
 
 if errors:
     print('\n'.join(errors))
