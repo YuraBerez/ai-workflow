@@ -126,6 +126,8 @@ docs/
     <feature-slug>/        one folder for each feature
       README.md            the feature as it works now                 (documenter)
       brief.md, spec.md, ux.md, plan.md, test-checklist-<pr-key>.md, ...  (see contract.md)
+.github/workflows/
+  security.yml             secrets, workflow security, dependency review    (devops)
 ```
 
 ## When the orchestrator calls each agent

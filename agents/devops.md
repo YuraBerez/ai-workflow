@@ -36,6 +36,30 @@ first, and obey it. Obey the Implementers section of the contract for your tasks
   store of the platform. If a task needs a new secret, tell its name and its store in
   your report. The user adds the value.
 
+## Security checks in CI
+
+Each repository of the project must have these checks in CI. The template is
+`templates/.github/workflows/security.yml` of the ai-workflow repository.
+
+- **Secrets** — gitleaks on the files and the git history.
+- **Workflows** — actionlint and zizmor on `.github/workflows/`.
+- **Dependencies** — the dependency review on each PR, and the audit tool of the stack,
+  for example `npm audit`, `pip-audit` or `dotnet list package --vulnerable`.
+- **Static analysis** — CodeQL or semgrep, if the project has it.
+
+Obey these rules for each workflow that you write or change:
+
+- Set `permissions` at the top. Give only the permissions that the jobs need, for
+  example `contents: read`.
+- Pin each action to a commit hash, with the version in a comment.
+- Use `persist-credentials: false` for `actions/checkout`, if the job does not push.
+- Do not put `${{ github.event.* }}` values directly into a `run` script. Put them into an
+  environment variable first.
+- Do not use `pull_request_target` with a checkout of the PR code.
+
+If a security check is not in CI, add it as a task, or write it as a process gap in your
+report.
+
 ## Approval
 
 You cannot talk to the user. Before one of these actions, stop with
