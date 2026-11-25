@@ -11,9 +11,15 @@ shell scripts. `WORKFLOW.md` tells how the parts work together.
 
 ## Check
 
-Run `scripts/lint.sh` before you commit. It examines the frontmatter, the links, the
-references to skills, and the agent, skill and hook tables. Correct each problem that it
-shows.
+Run these scripts before you commit. CI runs them on each push and PR
+(`.github/workflows/lint.yml`). Correct each problem that they show.
+
+- `scripts/lint.sh` — the integrity of the docs: frontmatter, links and links to
+  headings, references to skills, the agent, skill and hook tables, the modes of the
+  agents, the owner table, and STE warnings.
+- `scripts/security-lint.sh` — shellcheck, gitleaks (secrets), actionlint and zizmor
+  (workflow security). Pin each action in a workflow to a commit hash, with the version
+  in a comment.
 
 ## Writing style
 

@@ -103,12 +103,13 @@ The `templates/` folder contains the start structure of the docs for a project:
 PRODUCT.md           short description of the product: goal, users, scope, roadmap
 docs/tech/           architecture and technical questions: architecture, API, configuration, ADRs, runbooks
 docs/features/       product descriptions and specs of features, one folder for each feature
+.github/workflows/security.yml   CI security checks: secrets, workflows, dependencies
 ```
 
 Copy the templates into a project:
 
 ```sh
-cp -R templates/PRODUCT.md templates/docs <project>/
+cp -R templates/PRODUCT.md templates/docs templates/.github <project>/
 ```
 
 ## Hooks
@@ -135,6 +136,18 @@ To install them, add this to the `hooks` section of `~/.claude/settings.json`. R
 
 The hooks need `jq`.
 
+## Checks
+
+| Script | What it examines |
+|--------|------------------|
+| [scripts/lint.sh](scripts/lint.sh) | the integrity of the docs: frontmatter, links and links to headings, references to skills, the agent, skill and hook tables, the modes of the agents, the owner table, STE warnings |
+| [scripts/security-lint.sh](scripts/security-lint.sh) | shell scripts (shellcheck), secrets in the files and the git history (gitleaks), GitHub Actions workflows (actionlint, zizmor) |
+
+CI runs both scripts on each push to `main` and on each PR
+([.github/workflows/lint.yml](.github/workflows/lint.yml)). On a local machine,
+`security-lint.sh` skips a tool that is not installed. gitleaks runs in Docker if it is
+not installed.
+
 ## Repository layout
 
 ```
@@ -145,7 +158,9 @@ AGENTS.md                      # instructions for AI agents in this repository
 CLAUDE.md                      # imports AGENTS.md for Claude Code
 WORKFLOW.md                    # how the skills, agents and hooks work together
 templates/                     # PRODUCT.md and docs/ structure for a project
-scripts/lint.sh                # consistency check of this repository; run it before you commit
+scripts/lint.sh                # integrity check of the docs; run it before you commit
+scripts/security-lint.sh       # security check of the scripts, secrets and workflows
+.github/workflows/lint.yml     # CI that runs both scripts
 ```
 
 ## Add a skill
