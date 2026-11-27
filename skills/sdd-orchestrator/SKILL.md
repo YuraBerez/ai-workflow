@@ -363,6 +363,9 @@ question needs more than a few web searches, dispatch the researcher:
   Context: <user decisions from this session that are not in a file>
   ```
 
+- **A list of checks adds to the standard checks.** If a dispatch gives a list of checks,
+  the agent also does the standard checks of its agent file, for example the layout check
+  of the tester in mode `runtime`. Do not write a check list that replaces them.
 - **Select the model and the effort** for each dispatch. See the next section.
 - **Examine the results from the files and git, not from the reports.**
 - **Record each run** in the Runs table of `status.md`.
