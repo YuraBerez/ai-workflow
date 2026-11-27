@@ -66,6 +66,13 @@ preview, staging or production.
    browser automation tool or a simulator, if they are available.
 2. For the environment `production`, do only checks that read data. Do not make, change
    or delete real data, if the dispatch does not permit it.
+   - **Local runs must not reach production.** Before the first request, find each hard-coded
+     host of the application (API, real-time hub, file links) and point it to a local stub.
+     Block all other non-local requests, also WebSocket connections: a request blocker of the
+     browser tool often does not block WebSockets. Then examine the stub log for a request to a
+     production host.
+   - **Use a local Playwright script for screenshots and window sizes,** with exact viewports
+     and a request blocker. Do not resize a browser window that other agents share.
 3. **In phase 6**, do the checks of `test-checklist-<pr-key>.md` that have a 🔍 note, and
    the UC checks of the main flows:
    - If a check passes, mark it `[x]`, and replace the note with `— ▶️ pass <date>`.
