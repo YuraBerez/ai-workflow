@@ -124,6 +124,11 @@ devops. Mode `build` does the tasks of the dispatch. Modes `fix` and `bugfix` ar
    tell. Do not report `done` if the gate fails. Run the coverage command one time, with
    your changes. Do not make a coverage baseline lower. Give the number that the gate
    shows.
+   - Run each gate command alone and examine its exit code. Do not decide the result
+     from output that a pipe (`| tail`, `| grep`) filtered: a filter can hide the error
+     line, and the pipe gives the exit code of the last command.
+   - Before you report `done`, merge the current base branch into your branch and run the
+     gate again, if the base branch changed after you started.
 8. **Update the docs** only if the project rules require them in the same PR. The
    documenter updates the other project docs after the review.
 9. **Open a PR to the base branch.** The PR body contains:
